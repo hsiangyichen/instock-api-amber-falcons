@@ -41,3 +41,23 @@ export async function getById(req, res) {
     res.status(500).send(`Error getting inventory item with id ${id}`);
   }
 }
+
+export async function getInventoriesById(req, res) {
+  try {
+    console.log("params id", req.params.id);
+    const data = await knex("inventories")
+      .where({ warehouse_id: req.params.id })
+      .select("id", "item_name", "category", "status", "quantity");
+    if (data.length === 0) {
+      return res
+        .status(404)
+        .send(`could not find warehouse with id: ${req.params.id}`);
+    }
+    res.json(data);
+  } catch (err) {
+    console.log(
+      `Error getting inventory with warehouseid: ${req.params.id}:${err}`
+    );
+    res.status(500).send(`Error getting inventory by id`);
+  }
+}
