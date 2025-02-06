@@ -52,6 +52,7 @@ export async function createItem(req, res) {
     quantity,
     warehouse_id,
   };
+  //verify properties:
   if (!warehouse_id || !item_name || !description || !category || !status) {
     return res.status(400).json({
       message:
@@ -62,6 +63,7 @@ export async function createItem(req, res) {
     console.log(`Quantity is not a number: ${quantity}`);
     return res.status(400).send(`Error: Quantity is not a number.`);
   }
+  //check if warehouse exists:
   try {
     const warehouseInfo = await knex("warehouses")
       .where({ id: warehouse_id })
@@ -80,9 +82,18 @@ export async function createItem(req, res) {
       .status(500)
       .send(`Unable to add new item. Warehouse id not valid`);
   }
+  // insert into inventories and return the record
   try {
     const itemId = await knex("inventories").insert(newItem);
-    return res.status(201).send(`${itemId[0]}`);
+    const data = await knex("inventories").where({ id: itemId[0] }).first();
+    if (!data) {
+      console.log(`No item with id ${itemId} found.`);
+      return res.status(404).send(`No item with id ${itemId} found.`);
+    }
+    delete data.created_at;
+    delete data.updated_at;
+
+    res.status(201).json(data);
   } catch (error) {
     console.log(`Unable to add an item with this body: ${newItem}. ${error}`);
     return res.status(500).send(`Unable to add new item`);
