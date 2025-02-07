@@ -140,18 +140,10 @@ export async function deleteInventory(req, res) {
     res.status(500).send(`Error deleting inventory with id: ${req.params.id}`);
   }
 }
+
 export async function editItem(req, res) {
   const { warehouse_id, item_name, description, category, status, quantity } =
     req.body;
-  const editedItem = {
-    id: req.params.id,
-    item_name,
-    description,
-    category,
-    status,
-    quantity,
-    warehouse_id,
-  };
   //verify properties:
   if (
     !req.params.id ||
