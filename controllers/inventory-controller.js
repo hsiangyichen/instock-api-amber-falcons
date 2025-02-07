@@ -121,21 +121,26 @@ export async function createItem(req, res) {
 }
 
 export async function deleteInventory(req, res) {
+  const { id } = req.params;
   try {
-    const deleted = await knex("inventories")
-      .where({ id: req.params.id })
-      .del();
-
-    if (!deleted) {
-      return res.status(404).json({
-        message: `No inventory found with id: ${req.params.id}`,
-      });
+    // Check if inventory exists before deleting
+    const existingInventory = await knex("inventories").where({ id }).first();
+    if (!existingInventory) {
+      return res
+        .status(404)
+        .json({ message: `No inventory found with id: ${id}` });
     }
 
-    res.status(200).json({
+    // Delete the inventory item
+    await knex("inventories").where({ id }).del();
+
+    return res.status(200).json({
       message: `Inventory deleted successfully`,
+      id,
     });
   } catch (error) {
-    res.status(500).send(`Error deleting inventory with id: ${req.params.id}`);
+    return res
+      .status(500)
+      .send(`Error deleting inventory with id: ${req.params.id}`);
   }
 }
