@@ -6,8 +6,18 @@ const knex = initKnex(configuration);
 /* ------------------ Get all warehouses from the database ------------------ */
 async function getAllWarehouses(_req, res) {
   try {
-    const data = await knex("warehouses");
-    return res.json(data);
+    const data = await knex("warehouses").select(
+      "id",
+      "warehouse_name",
+      "address",
+      "city",
+      "country",
+      "contact_name",
+      "contact_position",
+      "contact_phone",
+      "contact_email"
+    );
+    res.json(data);
   } catch (error) {
     console.error("Error getting all warehouses:", error);
     return res
