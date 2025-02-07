@@ -119,3 +119,23 @@ export async function createItem(req, res) {
     return res.status(500).send(`Unable to add new item`);
   }
 }
+
+export async function deleteInventory(req, res) {
+  try {
+    const deleted = await knex("inventories")
+      .where({ id: req.params.id })
+      .del();
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: `No inventory found with id: ${req.params.id}`,
+      });
+    }
+
+    res.status(200).json({
+      message: `Inventory deleted successfully`,
+    });
+  } catch (error) {
+    res.status(500).send(`Error deleting inventory with id: ${req.params.id}`);
+  }
+}

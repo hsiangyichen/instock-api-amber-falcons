@@ -10,6 +10,9 @@ router
   .post(inventoryController.createItem);
 
 //hit this at : http://localhost:8080/api/inventory/2
-router.route("/:id").get(inventoryController.getById);
+router
+  .route("/:id")
+  .get(inventoryController.getById)
+  .delete(inventoryController.deleteInventory);
 
 export default router;

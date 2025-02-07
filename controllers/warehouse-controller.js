@@ -23,7 +23,7 @@ async function deleteWarehouse(req, res) {
     }
 
     res.status(200).json({
-      message: `warehouse deleted successfully`,
+      message: `Warehouse deleted successfully`,
     });
   } catch (error) {
     res.status(500).send(`Error deleting warehouse with id: ${req.params.id}`);
