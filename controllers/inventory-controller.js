@@ -22,6 +22,7 @@ export async function getById(req, res) {
       .select(
         "inventories.id",
         "warehouses.warehouse_name",
+        "inventories.warehouse_id",
         "inventories.item_name",
         "inventories.description",
         "inventories.category",
@@ -137,5 +138,91 @@ export async function deleteInventory(req, res) {
     });
   } catch (error) {
     res.status(500).send(`Error deleting inventory with id: ${req.params.id}`);
+  }
+}
+export async function editItem(req, res) {
+  const { warehouse_id, item_name, description, category, status, quantity } =
+    req.body;
+  const editedItem = {
+    id: req.params.id,
+    item_name,
+    description,
+    category,
+    status,
+    quantity,
+    warehouse_id,
+  };
+  //verify properties:
+  if (
+    !req.params.id ||
+    !warehouse_id ||
+    !item_name ||
+    !description ||
+    !category ||
+    !status
+  ) {
+    return res.status(400).json({
+      message:
+        "Missing properties in the request body. Please include warehouse_id, item_name, description, category, status, and quantity",
+    });
+  }
+  if (typeof quantity !== typeof 1) {
+    console.log(`Quantity is not a number: ${quantity}`);
+    return res.status(400).send(`Error: Quantity is not a number.`);
+  }
+
+  //Check if item exists:
+  try {
+    const itemInfo = await knex("inventories")
+      .where({ id: req.params.id })
+      .first();
+    if (!itemInfo) {
+      console.log(`No item found with id ${req.params.id}.`);
+      return res
+        .status(400)
+        .send(`Error: Item with id ${req.params.id} does not exist`);
+    }
+  } catch (error) {
+    console.log(`Error finding item with id ${req.params.id}. ${error}`);
+    return res
+      .status(500)
+      .send(`Error: Item with id ${req.params.id} not found`);
+  }
+
+  //check if warehouse exists:
+  try {
+    const warehouseInfo = await knex("warehouses")
+      .where({ id: warehouse_id })
+      .first();
+    if (!warehouseInfo) {
+      console.log(`No warehouse found with id ${warehouse_id}.`);
+      return res
+        .status(400)
+        .send(
+          `Unable to add new item. Warehouse with id ${warehouse_id} does not exist in the warehouses table`
+        );
+    }
+  } catch (error) {
+    console.log(`Error finding warehouse with id ${warehouse_id}. ${error}`);
+    return res.status(500).send(`Error: Warehouse not found`);
+  }
+
+  try {
+    const rowsUpdated = await knex("inventories")
+      .where({ id: req.params.id })
+      .update(req.body);
+    if (rowsUpdated === 0) {
+      return res.status(404).json({
+        message: `Item with ID ${req.params.id} not found`,
+      });
+    }
+    const updatedItem = await knex("inventories").where({
+      id: req.params.id,
+    });
+
+    res.status(200).json(updatedItem[0]);
+  } catch (err) {
+    console.log(`${err}`);
+    res.status(500).send(`Error editing item with id ${req.params.id}`);
   }
 }
