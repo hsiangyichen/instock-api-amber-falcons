@@ -3,6 +3,7 @@ import configuration from "../knexfile.js";
 
 const knex = initKnex(configuration);
 
+/* ------------------ Get all warehouses from the database ------------------ */
 async function getAllWarehouses(_req, res) {
   try {
     const data = await knex("warehouses").select(
@@ -18,25 +19,37 @@ async function getAllWarehouses(_req, res) {
     );
     res.json(data);
   } catch (error) {
-    res.send(500).send("Error getting all warehouses");
+    console.error("Error getting all warehouses:", error);
+    return res
+      .status(500)
+      .json({ message: "Error getting all warehouses", error: error.message });
   }
 }
 
+/* ------------------------ Delete a warehouse by id ------------------------ */
 async function deleteWarehouse(req, res) {
+  const { id } = req.params;
   try {
-    const deleted = await knex("warehouses").where({ id: req.params.id }).del();
-
-    if (!deleted) {
-      return res.status(404).json({
-        message: `No warehouse found with id: ${req.params.id}`,
-      });
+    // Check if warehouse exists before deleting
+    const existingWarehouse = await knex("warehouses").where({ id }).first();
+    if (!existingWarehouse) {
+      return res
+        .status(404)
+        .json({ message: `No warehouse found with id: ${id}` });
     }
 
-    res.status(200).json({
-      message: `Warehouse deleted successfully`,
+    // Delete the warehouse
+    await knex("warehouses").where({ id }).del();
+
+    return res.status(200).json({
+      message: `Warehouse with id ${id} deleted successfully`,
     });
   } catch (error) {
-    res.status(500).send(`Error deleting warehouse with id: ${req.params.id}`);
+    console.error(`Error deleting warehouse with id ${id}:`, error);
+    return res.status(500).json({
+      message: `Error deleting warehouse with id: ${id}`,
+      error: error.message,
+    });
   }
 }
 
