@@ -21,6 +21,7 @@ async function getAllWarehouses(_req, res) {
       "contact_phone",
       "contact_email"
     );
+
     res.json(data);
   } catch (error) {
     console.error("Error getting all warehouses:", error);
