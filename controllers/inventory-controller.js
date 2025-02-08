@@ -3,15 +3,23 @@ import configuration from "../knexfile.js";
 const knex = initKnex(configuration);
 
 export async function getAll(req, res) {
+  let query = req.query.s;
+  if (!query) {
+    query = ""; //grabs all items
+  }
   try {
     //select all columns from inventories table, and the warehouse_name column from warehouses table
     const data = await knex("inventories")
       .select("inventories.*", "warehouses.warehouse_name")
-      .join("warehouses", "warehouses.id", "warehouse_id");
-    res.json(data);
+      .join("warehouses", "warehouses.id", "warehouse_id")
+      .whereILike("inventories.item_name", `${query}%`)
+      .orWhereILike("inventories.category", `${query}%`)
+      .orWhereILike("inventories.description", `%${query}%`)
+      .orWhereILike("warehouses.warehouse_name", `%${query}%`);
+    return res.json(data);
   } catch (err) {
     console.log(`Error getting inventory: ${err}`);
-    res.status(500).send(`Error getting inventory`);
+    return res.status(500).send(`Error getting inventory`);
   }
 }
 

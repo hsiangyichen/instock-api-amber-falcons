@@ -8,19 +8,32 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isValidPhone = (phone) => /^\+1 \(\d{3}\) \d{3}-\d{4}$/.test(phone);
 
 /* ------------------ Get all warehouses from the database ------------------ */
-async function getAllWarehouses(_req, res) {
+async function getAllWarehouses(req, res) {
+  let query = req.query.s;
+  if (!query) {
+    query = ""; //grabs all warehouses
+  }
   try {
-    const data = await knex("warehouses").select(
-      "id",
-      "warehouse_name",
-      "address",
-      "city",
-      "country",
-      "contact_name",
-      "contact_position",
-      "contact_phone",
-      "contact_email"
-    );
+    const data = await knex("warehouses")
+      .select(
+        "id",
+        "warehouse_name",
+        "address",
+        "city",
+        "country",
+        "contact_name",
+        "contact_position",
+        "contact_phone",
+        "contact_email"
+      )
+      .whereILike("warehouse_name", `${query}%`)
+      .orWhereILike("address", `${query}%`)
+      .orWhereILike("city", `%${query}%`)
+      .orWhereILike("country", `%${query}%`)
+      .orWhereILike("contact_name", `%${query}%`)
+      .orWhereILike("contact_position", `%${query}%`)
+      .orWhereILike("contact_phone", `%${query}%`)
+      .orWhereILike("contact_email", `%${query}%`);
 
     res.json(data);
   } catch (error) {
