@@ -13,6 +13,7 @@ router
 router
   .route("/:id")
   .get(inventoryController.getById)
-  .delete(inventoryController.deleteInventory);
+  .delete(inventoryController.deleteInventory)
+  .put(inventoryController.editItem);
 
 export default router;
