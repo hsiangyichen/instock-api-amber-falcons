@@ -3,6 +3,10 @@ import configuration from "../knexfile.js";
 
 const knex = initKnex(configuration);
 
+// Helper functions for validation
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidPhone = (phone) => /^\+1 \(\d{3}\) \d{3}-\d{4}$/.test(phone);
+
 /* ------------------ Get all warehouses from the database ------------------ */
 async function getAllWarehouses(_req, res) {
   try {
@@ -17,12 +21,79 @@ async function getAllWarehouses(_req, res) {
       "contact_phone",
       "contact_email"
     );
+
     res.json(data);
   } catch (error) {
     console.error("Error getting all warehouses:", error);
     return res
       .status(500)
       .json({ message: "Error getting all warehouses", error: error.message });
+  }
+}
+
+/* --------------------------- Add a new warehouse -------------------------- */
+async function addWarehouse(req, res) {
+  const {
+    warehouse_name,
+    address,
+    city,
+    country,
+    contact_name,
+    contact_position,
+    contact_phone,
+    contact_email,
+  } = req.body;
+
+  // Validate required fields
+  if (
+    !warehouse_name ||
+    !address ||
+    !city ||
+    !country ||
+    !contact_name ||
+    !contact_position ||
+    !contact_phone ||
+    !contact_email
+  ) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  // Validate email format
+  if (!isValidEmail(contact_email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
+
+  // Validate phone format
+  if (!isValidPhone(contact_phone)) {
+    return res.status(400).json({
+      message: "Invalid phone number format (e.g., +1 (919) 797-2875)",
+    });
+  }
+
+  try {
+    // Insert the new warehouse and retrieve the data from this id
+    const [newWarehouseId] = await knex("warehouses").insert(req.body);
+    const newWarehouse = await knex("warehouses")
+      .select([
+        "id",
+        "warehouse_name",
+        "address",
+        "city",
+        "country",
+        "contact_name",
+        "contact_position",
+        "contact_phone",
+        "contact_email",
+      ])
+      .where({ id: newWarehouseId })
+      .first();
+
+    return res.status(201).json(newWarehouse);
+  } catch (error) {
+    console.error("Error adding warehouse:", error);
+    return res
+      .status(500)
+      .json({ message: "Error adding warehouse", error: error.message });
   }
 }
 
@@ -53,4 +124,4 @@ async function deleteWarehouse(req, res) {
   }
 }
 
-export { getAllWarehouses, deleteWarehouse };
+export { getAllWarehouses, addWarehouse, deleteWarehouse };
