@@ -3,7 +3,7 @@ const router = express.Router();
 
 import * as inventoryController from "../controllers/inventory-controller.js";
 
-//hit this at : http://localhost:8080/api/inventory
+//hit this at : http://localhost:8080/api/inventory?s={searchTerm}
 router
   .route("/")
   .get(inventoryController.getAll)
