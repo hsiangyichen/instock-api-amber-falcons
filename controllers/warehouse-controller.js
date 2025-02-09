@@ -140,7 +140,7 @@ async function deleteWarehouse(req, res) {
 async function getWarehouseDetails(req, res) {
   try {
       const { id } = req.params;
-      const data = await knex("warehouses").where({ id: id });
+      const data = await knex("warehouses").where({ id: id }).first();
       res.json(data);
   } catch (error) {
       res.send(500).send("Error getting warehouse details");
