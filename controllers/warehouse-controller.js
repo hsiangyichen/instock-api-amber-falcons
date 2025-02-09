@@ -9,23 +9,38 @@ const isValidPhone = (phone) => /^\+1 \(\d{3}\) \d{3}-\d{4}$/.test(phone);
 
 /* ------------------ Get all warehouses from the database ------------------ */
 async function getAllWarehouses(req, res) {
-  let query = req.query.s;
-  if (!query) {
-    query = ""; //grabs all warehouses
+  let query = req.query.s || "";
+  let sortBy = req.query.sort_by || "warehouse_name";
+  let orderBy = req.query.order_by === "desc" ? "desc" : "asc";
+
+  // Validate sorting column
+  const validColumns = [
+    "id",
+    "warehouse_name",
+    "address",
+    "city",
+    "country",
+    "contact_name",
+    "contact_information",
+  ];
+  if (!validColumns.includes(sortBy)) {
+    return res.status(400).json({ error: "Invalid sort_by parameter" });
   }
+
   try {
-    const data = await knex("warehouses")
-      .select(
-        "id",
-        "warehouse_name",
-        "address",
-        "city",
-        "country",
-        "contact_name",
-        "contact_position",
-        "contact_phone",
-        "contact_email"
-      )
+    let queryBuilder = knex("warehouses").select(
+      "id",
+      "warehouse_name",
+      "address",
+      "city",
+      "country",
+      "contact_name",
+      "contact_position",
+      "contact_phone",
+      "contact_email"
+    );
+
+    queryBuilder = queryBuilder
       .whereILike("warehouse_name", `${query}%`)
       .orWhereILike("address", `${query}%`)
       .orWhereILike("city", `%${query}%`)
@@ -34,6 +49,16 @@ async function getAllWarehouses(req, res) {
       .orWhereILike("contact_position", `%${query}%`)
       .orWhereILike("contact_phone", `%${query}%`)
       .orWhereILike("contact_email", `%${query}%`);
+
+    if (sortBy === "contact_information") {
+      queryBuilder = queryBuilder.orderByRaw(
+        `CONCAT(contact_phone, ' ', contact_email) ${orderBy}`
+      );
+    } else {
+      queryBuilder = queryBuilder.orderBy(sortBy, orderBy);
+    }
+
+    const data = await queryBuilder;
 
     res.json(data);
   } catch (error) {

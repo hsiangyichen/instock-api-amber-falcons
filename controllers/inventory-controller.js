@@ -3,19 +3,34 @@ import configuration from "../knexfile.js";
 const knex = initKnex(configuration);
 
 export async function getAll(req, res) {
-  let query = req.query.s;
-  if (!query) {
-    query = ""; //grabs all items
+  let query = req.query.s || "";
+  let sortBy = req.query.sort_by || "item_name";
+  let orderBy = req.query.order_by === "desc" ? "desc" : "asc";
+
+  // Validate sorting column
+  const validColumns = [
+    "id",
+    "item_name",
+    "category",
+    "status",
+    "quantity",
+    "warehouse_name",
+  ];
+  if (!validColumns.includes(sortBy)) {
+    return res.status(400).json({ error: "Invalid sort_by parameter" });
   }
+
   try {
-    //select all columns from inventories table, and the warehouse_name column from warehouses table
+    // select all columns from inventories table, and the warehouse_name column from warehouses table
     const data = await knex("inventories")
       .select("inventories.*", "warehouses.warehouse_name")
       .join("warehouses", "warehouses.id", "warehouse_id")
       .whereILike("inventories.item_name", `${query}%`)
       .orWhereILike("inventories.category", `${query}%`)
       .orWhereILike("inventories.description", `%${query}%`)
-      .orWhereILike("warehouses.warehouse_name", `%${query}%`);
+      .orWhereILike("warehouses.warehouse_name", `%${query}%`)
+      .orderBy(sortBy, orderBy);
+
     return res.json(data);
   } catch (err) {
     console.log(`Error getting inventory: ${err}`);
@@ -81,6 +96,7 @@ export async function createItem(req, res) {
     quantity,
     warehouse_id,
   };
+
   //verify properties:
   if (!warehouse_id || !item_name || !description || !category || !status) {
     return res.status(400).json({
@@ -92,6 +108,7 @@ export async function createItem(req, res) {
     console.log(`Quantity is not a number: ${quantity}`);
     return res.status(400).send(`Error: Quantity is not a number.`);
   }
+
   //check if warehouse exists:
   try {
     const warehouseInfo = await knex("warehouses")
