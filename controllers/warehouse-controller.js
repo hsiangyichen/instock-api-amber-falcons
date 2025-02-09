@@ -137,4 +137,14 @@ async function deleteWarehouse(req, res) {
   }
 }
 
-export { getAllWarehouses, addWarehouse, deleteWarehouse };
+async function getWarehouseDetails(req, res) {
+  try {
+      const { id } = req.params;
+      const data = await knex("warehouses").where({ id: id });
+      res.json(data);
+  } catch (error) {
+      res.send(500).send("Error getting warehouse details");
+  }
+}
+
+export { getWarehouseDetails, getAllWarehouses, addWarehouse, deleteWarehouse };
