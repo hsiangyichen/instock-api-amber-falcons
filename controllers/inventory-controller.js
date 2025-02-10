@@ -67,16 +67,18 @@ export async function getById(req, res) {
 }
 
 export async function getInventoriesById(req, res) {
+  const { id } = req.params;
+
   try {
-    console.log("params id", req.params.id);
-    const data = await knex("inventories")
-      .where({ warehouse_id: req.params.id })
-      .select("id", "item_name", "category", "status", "quantity");
-    if (data.length === 0) {
-      return res
-        .status(404)
-        .send(`could not find warehouse with id: ${req.params.id}`);
+    const warehouseExists = await knex("warehouses").where({ id }).first();
+    if (!warehouseExists) {
+      return res.status(404).send(`Warehouse with id ${id} does not exist.`);
     }
+
+    const data = await knex("inventories")
+      .where({ warehouse_id: id })
+      .select("id", "item_name", "category", "status", "quantity");
+
     res.json(data);
   } catch (err) {
     console.log(
@@ -85,6 +87,7 @@ export async function getInventoriesById(req, res) {
     res.status(500).send(`Error getting inventory by id`);
   }
 }
+
 export async function createItem(req, res) {
   const { warehouse_id, item_name, description, category, status, quantity } =
     req.body;
