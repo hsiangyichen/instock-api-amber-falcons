@@ -52,7 +52,7 @@ async function getAllWarehouses(req, res) {
 
     if (sortBy === "contact_information") {
       queryBuilder = queryBuilder.orderByRaw(
-        `CONCAT(contact_phone, ' ', contact_email) ${orderBy}`
+        `CONCAT(contact_email) ${orderBy}`
       );
     } else {
       queryBuilder = queryBuilder.orderBy(sortBy, orderBy);
